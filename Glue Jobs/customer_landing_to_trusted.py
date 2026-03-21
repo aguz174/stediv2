@@ -30,6 +30,7 @@ Customer_Trusted_Sink = glueContext.getSink(
 )
 
 Customer_Trusted_Sink.setFormat("json")
+
 Customer_Trusted_Sink.setCatalogInfo(
     catalogDatabase="stedi-2",
     catalogTableName="customer_trusted"
