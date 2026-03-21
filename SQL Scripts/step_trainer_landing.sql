@@ -1,7 +1,16 @@
-CREATE EXTERNAL TABLE IF NOT EXISTS `steptrainer_landing` (
+CREATE EXTERNAL TABLE IF NOT EXISTS `stedi-2`.`steptrainer_landing` (
   `sensorReadingTime` bigint,
   `serialNumber` string,
   `distanceFromObject` int
 )
 ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
-LOCATION 's3://stedi-1/steptrainer/steptrainer_landing/';
+WITH SERDEPROPERTIES (
+  'ignore.malformed.json' = 'FALSE',
+  'dots.in.keys' = 'FALSE',
+  'case.insensitive' = 'TRUE',
+  'mapping' = 'TRUE'
+)
+STORED AS INPUTFORMAT 'org.apache.hadoop.mapred.TextInputFormat'
+OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION 's3://stedi-1/steptrainer_landing/'
+TBLPROPERTIES ('classification'='json');
