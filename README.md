@@ -21,5 +21,4 @@ Udacity STEDI Human Balance Project for D609
 ​Customer Curated: A "master" filter created by joining customer_trusted with accelerometer_trusted.
 ​Machine Learning Curated: The final output. An inner join between step_trainer_trusted and accelerometer_trusted based on matching timestamps (sensorReadingTime = timestamp).
 
-​Validation
 ​Validation was performed using Athena SQL queries to verify row counts across all zones. 
