@@ -1,8 +1,8 @@
 # stediv2
 Udacity STEDI Human Balance Project for D609
 
-​STEDI Human Balance Analytics Pipeline
 ​Project Overview
+
 ​This project involves building an ETL pipeline for a healthcare sensor product called STEDI. The goal is to process data from three different sources—customer records, accelerometer sensors, and step trainer sensors—to create a curated dataset for machine learning.
 
 ​Data Lake Architecture
