@@ -14,16 +14,17 @@ job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
 Step_Trainer_Trusted_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE",
-    table_name="step_trainer_trusted",
-    transformation_ctx="Step_Trainer_Trusted_Node"
+    database="stedi-2",
+    table_name="steptrainer_trusted"
 )
 
 Accel_Trusted_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE",
-    table_name="accelerometer_trusted",
-    transformation_ctx="Accel_Trusted_Node"
+    database="stedi-2",
+    table_name="accelerometer_trusted"
 )
+
+Step_Trainer_Trusted_Node.toDF().createOrReplaceTempView("steptrainer_trusted")
+Accel_Trusted_Node.toDF().createOrReplaceTempView("accelerometer_trusted")
 
 ML_Join_SQL = """
               SELECT
@@ -31,37 +32,27 @@ ML_Join_SQL = """
                   at.x,
                   at.y,
                   at.z
-              FROM
-                  step_trainer_trusted st
-                      INNER JOIN
-                  accelerometer_trusted at
-              ON
-                  st.sensorReadingTime = at.timestamp
+              FROM steptrainer_trusted st
+                       INNER JOIN accelerometer_trusted at
+              ON st.sensorReadingTime = at.timestamp \
               """
 
-ML_Curated_Transform = sparkSqlQuery(
-    glueContext,
-    query=ML_Join_SQL,
-    mapping={
-        "step_trainer_trusted": Step_Trainer_Trusted_Node,
-        "accelerometer_trusted": Accel_Trusted_Node
-    },
-    transformation_ctx="ML_Curated_Transform"
-)
+SQL_DF = spark.sql(ML_Join_SQL)
+ML_Curated_Transform = DynamicFrame.fromDF(SQL_DF, glueContext, "ML_Curated_Transform")
 
 ML_Curated_Sink = glueContext.getSink(
-    path="s3://YOUR_BUCKET/machine_learning/curated/",
+    path="s3://stedi-1/machinelearning_curated/",
     connection_type="s3",
     updateBehavior="UPDATE_IN_DATABASE",
-    enableUpdateCatalog=True,
-    transformation_ctx="ML_Curated_Sink"
+    enableUpdateCatalog=True
 )
 
+ML_Curated_Sink.setFormat("json")
+
 ML_Curated_Sink.setCatalogInfo(
-    catalogDatabase="YOUR_DATABASE",
-    catalogTableName="machine_learning_curated"
+    catalogDatabase="stedi-2",
+    catalogTableName="machinelearning_curated"
 )
 
 ML_Curated_Sink.writeFrame(ML_Curated_Transform)
-
 job.commit()

@@ -4,6 +4,7 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
+from awsglue.dynamicframe import DynamicFrame
 
 args = getResolvedOptions(sys.argv, ['JOB_NAME'])
 sc = SparkContext()
@@ -44,5 +45,8 @@ Customer_Curated_Sink.setCatalogInfo(
     catalogTableName="customer_curated"
 )
 
-Customer_Curated_Sink.writeFrame(DynamicFrame.fromDF(SQL_DF, glueContext, "SQL_DF"))
+dynamic_frame_to_write = DynamicFrame.fromDF(SQL_DF, glueContext, "dynamic_frame_to_write")
+
+
+Customer_Curated_Sink.writeFrame(dynamic_frame_to_write)
 job.commit()
