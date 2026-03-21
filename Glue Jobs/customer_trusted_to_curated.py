@@ -13,44 +13,36 @@ job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
 Customer_Trusted_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE",
-    table_name="customer_trusted",
-    transformation_ctx="Customer_Trusted_Node"
+    database="stedi-2",
+    table_name="customer_trusted"
 )
 
 Accel_Trusted_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE",
-    table_name="accelerometer_trusted",
-    transformation_ctx="Accel_Trusted_Node"
+    database="stedi-2",
+    table_name="accelerometer_trusted"
 )
 
-Curated_Join_Node = Join.apply(
-    frame1=Customer_Trusted_Node,
-    frame2=Accel_Trusted_Node,
-    keys1=["email"],
-    keys2=["user"],
-    transformation_ctx="Curated_Join_Node"
-)
+Customer_Trusted_Node.toDF().createOrReplaceTempView("customer_trusted")
+Accel_Trusted_Node.toDF().createOrReplaceTempView("accelerometer_trusted")
 
-Drop_Duplicate_Node = DropFields.apply(
-    frame=Curated_Join_Node,
-    paths=["user", "timestamp", "x", "y", "z"],
-    transformation_ctx="Drop_Duplicate_Node"
-)
+SQL_DF = spark.sql("""
+                   SELECT DISTINCT c.* FROM customer_trusted c
+                                                JOIN accelerometer_trusted a ON c.email = a.user
+                   """)
 
 Customer_Curated_Sink = glueContext.getSink(
-    path="s3://YOUR_BUCKET/customer/curated/",
+    path="s3://stedi-1/customer_curated/",
     connection_type="s3",
     updateBehavior="UPDATE_IN_DATABASE",
-    enableUpdateCatalog=True,
-    transformation_ctx="Customer_Curated_Sink"
+    partitionKeys=[],
+    enableUpdateCatalog=True
 )
 
+Customer_Curated_Sink.setFormat("json")
 Customer_Curated_Sink.setCatalogInfo(
-    catalogDatabase="YOUR_DATABASE",
+    catalogDatabase="stedi-2",
     catalogTableName="customer_curated"
 )
 
-Customer_Curated_Sink.writeFrame(Drop_Duplicate_Node)
-
+Customer_Curated_Sink.writeFrame(DynamicFrame.fromDF(SQL_DF, glueContext, "SQL_DF"))
 job.commit()

@@ -13,13 +13,13 @@ job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
 Accel_Landing_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE",
+    database="stedi-2",
     table_name="accelerometer_landing",
     transformation_ctx="Accel_Landing_Node"
 )
 
 Customer_Trusted_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE",
+    database="stedi-2",
     table_name="customer_trusted",
     transformation_ctx="Customer_Trusted_Node"
 )
@@ -39,15 +39,17 @@ Privacy_Drop_Node = DropFields.apply(
 )
 
 Accel_Trusted_Sink = glueContext.getSink(
-    path="s3://YOUR_BUCKET/accelerometer/trusted/",
+    path="s3://stedi-1/accelerometer_trusted/",
     connection_type="s3",
     updateBehavior="UPDATE_IN_DATABASE",
     enableUpdateCatalog=True,
     transformation_ctx="Accel_Trusted_Sink"
 )
 
+Accel_Trusted_Sink.setFormat("json")
+
 Accel_Trusted_Sink.setCatalogInfo(
-    catalogDatabase="YOUR_DATABASE",
+    catalogDatabase="stedi-2",
     catalogTableName="accelerometer_trusted"
 )
 

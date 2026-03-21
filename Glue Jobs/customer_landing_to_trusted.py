@@ -14,35 +14,26 @@ job.init(args['JOB_NAME'], args)
 
 Customer_Landing_Node = glueContext.create_dynamic_frame.from_catalog(
     database="stedi-2",
-    table_name="customer_landing",
-    transformation_ctx="Customer_Landing_Node"
+    table_name="customer_landing"
 )
 
 Share_With_Research_Node = Filter.apply(
     frame=Customer_Landing_Node,
-    f=lambda x: x["shareWithResearchAsOfDate"] is not None,
-    transformation_ctx="Share_With_Research_Node"
-)
-
-Drop_Serial_Number_Node = DropFields.apply(
-    frame=Share_With_Research_Node,
-    paths=["serialNumber"],
-    transformation_ctx="Drop_Serial_Number_Node"
+    f=lambda x: x["shareWithResearchAsOfDate"] is not None
 )
 
 Customer_Trusted_Sink = glueContext.getSink(
     path="s3://stedi-1/customer_trusted/",
     connection_type="s3",
     updateBehavior="UPDATE_IN_DATABASE",
-    enableUpdateCatalog=True,
-    transformation_ctx="Customer_Trusted_Sink"
+    enableUpdateCatalog=True
 )
 
+Customer_Trusted_Sink.setFormat("json")
 Customer_Trusted_Sink.setCatalogInfo(
     catalogDatabase="stedi-2",
     catalogTableName="customer_trusted"
 )
 
-Customer_Trusted_Sink.writeFrame(Drop_Serial_Number_Node)
-
+Customer_Trusted_Sink.writeFrame(Share_With_Research_Node)
 job.commit()

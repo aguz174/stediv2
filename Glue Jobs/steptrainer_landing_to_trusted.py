@@ -13,13 +13,13 @@ job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
 Step_Landing_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE",
-    table_name="step_trainer_landing",
+    database="stedi-2",
+    table_name="steptrainer_landing",
     transformation_ctx="Step_Landing_Node"
 )
 
 Customer_Curated_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE",
+    database="stedi-2",
     table_name="customer_curated",
     transformation_ctx="Customer_Curated_Node"
 )
@@ -39,16 +39,18 @@ Step_Drop_Node = DropFields.apply(
 )
 
 Step_Trusted_Sink = glueContext.getSink(
-    path="s3://YOUR_BUCKET/step_trainer/trusted/",
+    path="s3://stedi-1/steptrainer_trusted/",
     connection_type="s3",
     updateBehavior="UPDATE_IN_DATABASE",
     enableUpdateCatalog=True,
     transformation_ctx="Step_Trusted_Sink"
 )
 
+Step_Trusted_Sink.setFormat("json")
+
 Step_Trusted_Sink.setCatalogInfo(
-    catalogDatabase="YOUR_DATABASE",
-    catalogTableName="step_trainer_trusted"
+    catalogDatabase="stedi-2",
+    catalogTableName="steptrainer_trusted"
 )
 
 Step_Trusted_Sink.writeFrame(Step_Drop_Node)
