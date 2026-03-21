@@ -13,7 +13,7 @@ job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
 Customer_Landing_Node = glueContext.create_dynamic_frame.from_catalog(
-    database="YOUR_DATABASE_NAME",
+    database="stedi-2",
     table_name="customer_landing",
     transformation_ctx="Customer_Landing_Node"
 )
@@ -31,7 +31,7 @@ Drop_Serial_Number_Node = DropFields.apply(
 )
 
 Customer_Trusted_Sink = glueContext.getSink(
-    path="s3://YOUR_BUCKET_NAME/customer/trusted/",
+    path="s3://stedi-1/customer_trusted/",
     connection_type="s3",
     updateBehavior="UPDATE_IN_DATABASE",
     enableUpdateCatalog=True,
@@ -39,7 +39,7 @@ Customer_Trusted_Sink = glueContext.getSink(
 )
 
 Customer_Trusted_Sink.setCatalogInfo(
-    catalogDatabase="YOUR_DATABASE_NAME",
+    catalogDatabase="stedi-2",
     catalogTableName="customer_trusted"
 )
 
